@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>View PDF with Bookmark Feature</title>
+<style>
+  /* Basic styling */
+  body {
+    font-family: Arial, sans-serif;
+  }
+  #pdf-container {
+    width: 80%;
+    margin: 40px auto;
+  }
+  #remarks-container {
+    margin: 20px auto;
+    width: 80%;
+    text-align: center;
+  }
+  .bookmark-list {
+    margin-top: 20px;
+  }
+  .bookmark-item {
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin: 10px 0;
+  }
+  .delete-button {
+    color: red;
+    cursor: pointer;
+  }
+  .save-message {
+    color: green;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<button onclick="viewPdf()">View Quran</button>
+<div id="pdf-container">
+  <iframe id="pdf-frame" src="" frameborder="0" width="100%" height="500"></iframe>
+</div>
+
+<div id="remarks-container">
+  <h3>Bookmark This Page</h3>
+  <textarea id="remarks-text" placeholder="Add remarks for this bookmark" rows="3" cols="50"></textarea><br><br>
+  <button onclick="saveBookmark()">Save Bookmark</button>
+</div>
+
+<div id="save-message" class="save-message"></div>
+
+<center><div id="bookmarks-container" class="bookmark-list">
+  <h3>Your Bookmarks</h3>
+  <!-- Bookmarks will be displayed here -->
+</div></center>
+
+<script>
+  // Array to store bookmarks
+  let bookmarks = JSON.parse(localStorage.getItem('pdfBookmarks')) || [];
+
+  function viewPdf() {
+    var iframe = document.getElementById('pdf-frame');
+    iframe.src = 'quran.pdf'; // Assuming Quran PDF is in the same folder
+  }
+
+  function saveBookmark() {
+    var iframe = document.getElementById('pdf-frame');
+    var currentPage = iframe.src;  // Get the current page URL of iframe
+    var remarks = document.getElementById('remarks-text').value;
+
+    // Save bookmark with page number, date, time, and remarks
+    var bookmark = {
+      page: currentPage,
+      dateTime: new Date().toLocaleString(),
+      remarks: remarks
+    };
+
+    bookmarks.push(bookmark);
+    localStorage.setItem('pdfBookmarks', JSON.stringify(bookmarks));
+
+    // Display the "Bookmark saved" message
+    document.getElementById('save-message').textContent = "Your bookmark saved";
+
+    // Update the displayed bookmarks
+    displayBookmarks();
+  }
+
+  function displayBookmarks() {
+    var bookmarksContainer = document.getElementById('bookmarks-container');
+    bookmarksContainer.innerHTML = '<h3>Your Bookmarks</h3>'; // Reset bookmarks list
+
+    if (bookmarks.length === 0) {
+      bookmarksContainer.innerHTML += '<p>No bookmarks found.</p>';
+      return;
+    }
+
+    // Loop through and display each bookmark
+    bookmarks.forEach((bookmark, index) => {
+      var bookmarkDiv = document.createElement('div');
+      bookmarkDiv.className = 'bookmark-item';
+
+      var bookmarkText = document.createElement('p');
+      bookmarkText.innerHTML = `Page: ${bookmark.page} <br> Date & Time: ${bookmark.dateTime} <br> Remarks: ${bookmark.remarks}`;
+
+      var deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-button';
+      deleteBtn.textContent = 'Delete Bookmark';
+      deleteBtn.onclick = function () {
+        deleteBookmark(index);
+      };
+
+      var clickBtn = document.createElement('button');
+      clickBtn.textContent = 'Go to Bookmark';
+      clickBtn.onclick = function () {
+        goToBookmark(bookmark);
+      };
+
+      bookmarkDiv.appendChild(bookmarkText);
+      bookmarkDiv.appendChild(deleteBtn);
+      bookmarkDiv.appendChild(clickBtn);
+      bookmarksContainer.appendChild(bookmarkDiv);
+    });
+  }
+
+  function deleteBookmark(index) {
+    bookmarks.splice(index, 1);
+    localStorage.setItem('pdfBookmarks', JSON.stringify(bookmarks));
+    displayBookmarks(); // Re-render the bookmark list
+  }
+
+  function goToBookmark(bookmark) {
+    var iframe = document.getElementById('pdf-frame');
+    iframe.src = bookmark.page;  // Open the bookmark's page in the iframe
+    document.getElementById('remarks-text').value = bookmark.remarks;  // Display the bookmark's remarks in the textarea
+  }
+
+  // Display saved bookmarks when the page loads
+  window.onload = function() {
+    displayBookmarks();
+  }
+</script>
+
+</body>
+</html>
